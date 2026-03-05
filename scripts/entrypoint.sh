@@ -30,15 +30,30 @@ echo "[INFO] Access verified."
 
 if [ ! -d "${REPO_DIR}/.git" ]; then
     echo "[INFO] Initializing git repo in ${REPO_DIR}..."
-    git init "$REPO_DIR"
+    git init -b "$BRANCH" "$REPO_DIR"
     git -C "$REPO_DIR" remote add origin "$REMOTE_URL"
+    git -C "$REPO_DIR" config user.name "$AUTHOR_NAME"
+    git -C "$REPO_DIR" config user.email "$AUTHOR_EMAIL"
+
+    # 若远程分支已有数据，fetch 并接管历史，避免强推覆盖远程内容
+    if git -C "$REPO_DIR" fetch origin "$BRANCH" 2>/dev/null; then
+        echo "[INFO] Remote has existing data, resetting to origin/${BRANCH}..."
+        git -C "$REPO_DIR" reset --hard "origin/${BRANCH}"
+    else
+        echo "[INFO] Remote branch not found, starting fresh."
+        git -C "$REPO_DIR" commit --allow-empty -m "init"
+    fi
 else
     echo "[INFO] Reusing existing git repo."
     git -C "$REPO_DIR" remote set-url origin "$REMOTE_URL"
+    git -C "$REPO_DIR" config user.name "$AUTHOR_NAME"
+    git -C "$REPO_DIR" config user.email "$AUTHOR_EMAIL"
+    # 历史遗留：.git 存在但无 commit（分支不存在），补创初始 commit
+    if ! git -C "$REPO_DIR" rev-parse HEAD >/dev/null 2>&1; then
+        echo "[INFO] No commits found, creating initial commit..."
+        git -C "$REPO_DIR" commit --allow-empty -m "init"
+    fi
 fi
-
-git -C "$REPO_DIR" config user.name "$AUTHOR_NAME"
-git -C "$REPO_DIR" config user.email "$AUTHOR_EMAIL"
 
 echo "[INFO] Starting sync loop (interval: ${INTERVAL}s, source: ${SOURCE})..."
 while true; do

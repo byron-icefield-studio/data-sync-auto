@@ -18,12 +18,24 @@ cd "$REPO_DIR"
 git add -A
 
 if git diff --cached --quiet; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] No changes, skip commit."
-    exit 0
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] No new changes."
+else
+    CHANGED=$(git diff --cached --name-only | wc -l | tr -d ' ')
+    git commit -m "auto sync: $(date '+%Y-%m-%d %H:%M:%S') (${CHANGED} file(s) changed)"
 fi
 
-CHANGED=$(git diff --cached --name-only | wc -l | tr -d ' ')
-git commit -m "auto sync: $(date '+%Y-%m-%d %H:%M:%S') (${CHANGED} file(s) changed)"
+# 无论是否有新 commit，都尝试 push（补推上次失败遗留的 commit）
+if git rev-parse "origin/${BRANCH}" >/dev/null 2>&1; then
+    UNPUSHED=$(git log "origin/${BRANCH}..HEAD" --oneline | wc -l | tr -d ' ')
+else
+    # 远程跟踪引用不存在，检查本地是否有 commit 需要推送
+    UNPUSHED=$(git log HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
+fi
+
+if [ "$UNPUSHED" -eq 0 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Already up to date."
+    exit 0
+fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Pushing to ${BRANCH}..."
 if git push --force-with-lease origin "${BRANCH}" 2>&1; then
