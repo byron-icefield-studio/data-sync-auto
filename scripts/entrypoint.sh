@@ -43,6 +43,31 @@ if [ ! -d "${REPO_DIR}/.git" ]; then
         echo "[INFO] Remote branch not found, starting fresh."
         git -C "$REPO_DIR" commit --allow-empty -m "init"
     fi
+
+    # 若仓库中没有 .gitignore，写入默认值（远程已有则跳过）
+    if [ ! -f "${REPO_DIR}/.gitignore" ]; then
+        echo "[INFO] Writing default .gitignore..."
+        cat > "${REPO_DIR}/.gitignore" << 'EOF'
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.nfs*
+EOF
+    fi
 else
     echo "[INFO] Reusing existing git repo."
     git -C "$REPO_DIR" remote set-url origin "$REMOTE_URL"
