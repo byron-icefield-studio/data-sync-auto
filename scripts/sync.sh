@@ -20,8 +20,16 @@ git add -A
 if git diff --cached --quiet; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] No new changes."
 else
-    CHANGED=$(git diff --cached --name-only | wc -l | tr -d ' ')
-    git commit -m "auto sync: $(date '+%Y-%m-%d %H:%M:%S') (${CHANGED} file(s) changed)"
+    ADDED=$(git diff --cached --name-status | awk '$1=="A"{print $2}' | tr '\n' ' ' | sed 's/ $//')
+    DELETED=$(git diff --cached --name-status | awk '$1=="D"{print $2}' | tr '\n' ' ' | sed 's/ $//')
+    MODIFIED=$(git diff --cached --name-status | awk '$1=="M"{print $2}' | tr '\n' ' ' | sed 's/ $//')
+
+    MSG="auto sync: $(date '+%Y-%m-%d %H:%M:%S')"
+    [ -n "$ADDED" ]    && MSG="${MSG}$(printf '\n+ %s' "$ADDED")"
+    [ -n "$DELETED" ]  && MSG="${MSG}$(printf '\n- %s' "$DELETED")"
+    [ -n "$MODIFIED" ] && MSG="${MSG}$(printf '\n~ %s' "$MODIFIED")"
+
+    git commit -m "$MSG"
 fi
 
 # 无论是否有新 commit，都尝试 push（补推上次失败遗留的 commit）
