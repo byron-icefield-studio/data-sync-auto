@@ -44,10 +44,22 @@ if [ ! -d "${REPO_DIR}/.git" ]; then
         git -C "$REPO_DIR" commit --allow-empty -m "init"
     fi
 
-    # 若仓库中没有 .gitignore，写入默认值（远程已有则跳过）
-    if [ ! -f "${REPO_DIR}/.gitignore" ]; then
-        echo "[INFO] Writing default .gitignore..."
-        cat > "${REPO_DIR}/.gitignore" << 'EOF'
+else
+    echo "[INFO] Reusing existing git repo."
+    git -C "$REPO_DIR" remote set-url origin "$REMOTE_URL"
+    git -C "$REPO_DIR" config user.name "$AUTHOR_NAME"
+    git -C "$REPO_DIR" config user.email "$AUTHOR_EMAIL"
+    # 历史遗留：.git 存在但无 commit（分支不存在），补创初始 commit
+    if ! git -C "$REPO_DIR" rev-parse HEAD >/dev/null 2>&1; then
+        echo "[INFO] No commits found, creating initial commit..."
+        git -C "$REPO_DIR" commit --allow-empty -m "init"
+    fi
+fi
+
+# 无论初始化还是复用，确保 .gitignore 存在（防止垃圾文件被提交）
+if [ ! -f "${REPO_DIR}/.gitignore" ]; then
+    echo "[INFO] Writing default .gitignore..."
+    cat > "${REPO_DIR}/.gitignore" << 'EOF'
 # macOS
 .DS_Store
 .AppleDouble
@@ -66,18 +78,14 @@ $RECYCLE.BIN/
 *~
 .fuse_hidden*
 .nfs*
+
+# Editor & IDE
+.history/
+.vscode/
+.idea/
+*.swp
+*.swo
 EOF
-    fi
-else
-    echo "[INFO] Reusing existing git repo."
-    git -C "$REPO_DIR" remote set-url origin "$REMOTE_URL"
-    git -C "$REPO_DIR" config user.name "$AUTHOR_NAME"
-    git -C "$REPO_DIR" config user.email "$AUTHOR_EMAIL"
-    # 历史遗留：.git 存在但无 commit（分支不存在），补创初始 commit
-    if ! git -C "$REPO_DIR" rev-parse HEAD >/dev/null 2>&1; then
-        echo "[INFO] No commits found, creating initial commit..."
-        git -C "$REPO_DIR" commit --allow-empty -m "init"
-    fi
 fi
 
 echo "[INFO] Starting sync loop (interval: ${INTERVAL}s, source: ${SOURCE})..."
