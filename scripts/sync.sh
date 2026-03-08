@@ -20,14 +20,14 @@ git add -A
 if git diff --cached --quiet; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] No new changes."
 else
-    ADDED=$(git diff --cached --name-status | awk '$1=="A"{print $2}' | tr '\n' ' ' | sed 's/ $//')
-    DELETED=$(git diff --cached --name-status | awk '$1=="D"{print $2}' | tr '\n' ' ' | sed 's/ $//')
-    MODIFIED=$(git diff --cached --name-status | awk '$1=="M"{print $2}' | tr '\n' ' ' | sed 's/ $//')
+    ADDED=$(git diff --cached --name-status | awk '$1=="A"{print "+ " $2}')
+    DELETED=$(git diff --cached --name-status | awk '$1=="D"{print "- " $2}')
+    MODIFIED=$(git diff --cached --name-status | awk '$1=="M"{print "~ " $2}')
 
     MSG="auto sync: $(date '+%Y-%m-%d %H:%M:%S')"
-    [ -n "$ADDED" ]    && MSG="${MSG}$(printf '\n+ %s' "$ADDED")"
-    [ -n "$DELETED" ]  && MSG="${MSG}$(printf '\n- %s' "$DELETED")"
-    [ -n "$MODIFIED" ] && MSG="${MSG}$(printf '\n~ %s' "$MODIFIED")"
+    [ -n "$ADDED" ]    && MSG="${MSG}$(printf '\n%s' "$ADDED")"
+    [ -n "$DELETED" ]  && MSG="${MSG}$(printf '\n%s' "$DELETED")"
+    [ -n "$MODIFIED" ] && MSG="${MSG}$(printf '\n%s' "$MODIFIED")"
 
     git commit -m "$MSG"
 fi
