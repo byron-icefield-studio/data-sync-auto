@@ -34,6 +34,11 @@ if [ ! -d "${REPO_DIR}/.git" ]; then
     git -C "$REPO_DIR" remote add origin "$REMOTE_URL"
     git -C "$REPO_DIR" config user.name "$AUTHOR_NAME"
     git -C "$REPO_DIR" config user.email "$AUTHOR_EMAIL"
+    # 限制 pack-objects 内存，防止容器 OOM Killer (SIGKILL) 杀死进程
+    # Limit pack-objects memory to avoid OOM Killer sending SIGKILL
+    git -C "$REPO_DIR" config pack.windowMemory "64m"
+    git -C "$REPO_DIR" config pack.packSizeLimit "64m"
+    git -C "$REPO_DIR" config pack.threads "1"
 
     # 若远程分支已有数据，fetch 并接管历史，避免强推覆盖远程内容
     if git -C "$REPO_DIR" fetch origin "$BRANCH" 2>/dev/null; then
@@ -49,6 +54,11 @@ else
     git -C "$REPO_DIR" remote set-url origin "$REMOTE_URL"
     git -C "$REPO_DIR" config user.name "$AUTHOR_NAME"
     git -C "$REPO_DIR" config user.email "$AUTHOR_EMAIL"
+    # 限制 pack-objects 内存，防止容器 OOM Killer (SIGKILL) 杀死进程
+    # Limit pack-objects memory to avoid OOM Killer sending SIGKILL
+    git -C "$REPO_DIR" config pack.windowMemory "64m"
+    git -C "$REPO_DIR" config pack.packSizeLimit "64m"
+    git -C "$REPO_DIR" config pack.threads "1"
     # 历史遗留：.git 存在但无 commit（分支不存在），补创初始 commit
     if ! git -C "$REPO_DIR" rev-parse HEAD >/dev/null 2>&1; then
         echo "[INFO] No commits found, creating initial commit..."
