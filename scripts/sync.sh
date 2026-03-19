@@ -12,6 +12,18 @@ fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Syncing ${SOURCE} -> ${REPO_DIR}..."
 
+# 每 20 次同步执行一次 git gc，控制 .git 体积
+# Run git gc every 20 syncs to keep .git size under control
+GC_COUNTER_FILE="${REPO_DIR}/.git/gc_counter"
+GC_COUNT=$(cat "$GC_COUNTER_FILE" 2>/dev/null || echo 0)
+GC_COUNT=$((GC_COUNT + 1))
+if [ "$GC_COUNT" -ge 20 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running git gc..."
+    git -C "$REPO_DIR" gc --prune=now --aggressive 2>&1 || true
+    GC_COUNT=0
+fi
+echo "$GC_COUNT" > "$GC_COUNTER_FILE"
+
 rsync -a --delete --exclude='.git' "${SOURCE}/" "${REPO_DIR}/"
 
 cd "$REPO_DIR"

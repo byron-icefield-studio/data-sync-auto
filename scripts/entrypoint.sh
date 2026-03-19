@@ -39,9 +39,13 @@ if [ ! -d "${REPO_DIR}/.git" ]; then
     git -C "$REPO_DIR" config pack.windowMemory "64m"
     git -C "$REPO_DIR" config pack.packSizeLimit "64m"
     git -C "$REPO_DIR" config pack.threads "1"
+    git -C "$REPO_DIR" config pack.window 0
+    git -C "$REPO_DIR" config pack.depth 0
+    git -C "$REPO_DIR" config core.bigFileThreshold "1m"
 
-    # 若远程分支已有数据，fetch 并接管历史，避免强推覆盖远程内容
-    if git -C "$REPO_DIR" fetch origin "$BRANCH" 2>/dev/null; then
+    # 若远程分支已有数据，浅 fetch 仅取最新快照，避免拉取全量历史
+    # Shallow fetch to avoid pulling full history into limited-memory container
+    if git -C "$REPO_DIR" fetch --depth=1 origin "$BRANCH" 2>/dev/null; then
         echo "[INFO] Remote has existing data, resetting to origin/${BRANCH}..."
         git -C "$REPO_DIR" reset --hard "origin/${BRANCH}"
     else
@@ -59,6 +63,9 @@ else
     git -C "$REPO_DIR" config pack.windowMemory "64m"
     git -C "$REPO_DIR" config pack.packSizeLimit "64m"
     git -C "$REPO_DIR" config pack.threads "1"
+    git -C "$REPO_DIR" config pack.window 0
+    git -C "$REPO_DIR" config pack.depth 0
+    git -C "$REPO_DIR" config core.bigFileThreshold "1m"
     # 历史遗留：.git 存在但无 commit（分支不存在），补创初始 commit
     if ! git -C "$REPO_DIR" rev-parse HEAD >/dev/null 2>&1; then
         echo "[INFO] No commits found, creating initial commit..."
