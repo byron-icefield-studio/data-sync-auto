@@ -1,7 +1,7 @@
 #!/bin/sh
 # Usage: sync.sh <source> <repo_dir> <branch>
 
-SOURCE="${1:-/data/sync}"
+SOURCE="${1:-/sync}"
 REPO_DIR="${2:-/repo}"
 BRANCH="${3:-main}"
 
@@ -24,7 +24,7 @@ if [ "$GC_COUNT" -ge 20 ]; then
 fi
 echo "$GC_COUNT" > "$GC_COUNTER_FILE"
 
-rsync -a --delete --exclude='.git' "${SOURCE}/" "${REPO_DIR}/"
+rsync -a --delete --exclude='.git' --exclude='.gitignore' "${SOURCE}/" "${REPO_DIR}/"
 
 cd "$REPO_DIR"
 git add -A

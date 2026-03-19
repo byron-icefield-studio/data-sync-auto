@@ -7,7 +7,7 @@ BRANCH="${GITHUB_BRANCH:-main}"
 AUTHOR_NAME="${GIT_AUTHOR_NAME:-Auto Sync Bot}"
 AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-sync-bot@local}"
 INTERVAL="${SYNC_INTERVAL:-300}"
-SOURCE="${SYNC_SOURCE:-/data/sync}"
+SOURCE="${SYNC_SOURCE:-/sync}"
 
 if [ -z "$GITHUB_TOKEN" ]; then
     echo "[ERROR] GITHUB_TOKEN is required"

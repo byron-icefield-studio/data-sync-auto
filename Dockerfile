@@ -6,7 +6,7 @@ ENV GITHUB_TOKEN="" \
     GITHUB_REPO="" \
     GITHUB_BRANCH="main" \
     SYNC_INTERVAL="300" \
-    SYNC_SOURCE="/data/sync" \
+    SYNC_SOURCE="/sync" \
     GIT_AUTHOR_NAME="Auto Sync Bot" \
     GIT_AUTHOR_EMAIL="sync-bot@local"
 
